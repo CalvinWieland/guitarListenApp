@@ -454,7 +454,17 @@ obj/osx/Release/src/ofApp.o: src/ofApp.cpp src/ofApp.h \
   ../../../libs/openFrameworks/video/ofVideoPlayer.h \
   ../../../libs/openFrameworks/3d/of3dUtils.h \
   ../../../libs/openFrameworks/3d/ofCamera.h \
-  ../../../libs/openFrameworks/3d/ofEasyCam.h
+  ../../../libs/openFrameworks/3d/ofEasyCam.h \
+  ../../../addons/ofxAssimpModelLoader/src/ofxAssimpModelLoader.h \
+  ../../../addons/ofxAssimpModelLoader/src/ofxAssimpMeshHelper.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/cimport.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/scene.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/postprocess.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/types.h \
+  ../../../addons/ofxAssimpModelLoader/src/ofxAssimpTexture.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/material.h \
+  ../../../addons/ofxAssimpModelLoader/src/ofxAssimpAnimation.h \
+  ../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/Importer.hpp
 src/ofApp.h:
 ../../../libs/openFrameworks/ofMain.h:
 ../../../libs/openFrameworks/utils/ofConstants.h:
@@ -912,3 +922,13 @@ src/ofApp.h:
 ../../../libs/openFrameworks/3d/of3dUtils.h:
 ../../../libs/openFrameworks/3d/ofCamera.h:
 ../../../libs/openFrameworks/3d/ofEasyCam.h:
+../../../addons/ofxAssimpModelLoader/src/ofxAssimpModelLoader.h:
+../../../addons/ofxAssimpModelLoader/src/ofxAssimpMeshHelper.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/cimport.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/scene.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/postprocess.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/types.h:
+../../../addons/ofxAssimpModelLoader/src/ofxAssimpTexture.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/material.h:
+../../../addons/ofxAssimpModelLoader/src/ofxAssimpAnimation.h:
+../../../addons/ofxAssimp/../ofxAssimpModelLoader/libs/assimp/include/assimp/Importer.hpp:

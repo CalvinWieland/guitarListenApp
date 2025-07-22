@@ -32,5 +32,7 @@
 		}
 	],
 	"openFrameworksProjectGeneratorVersion": "0.103.0",
-	"settings": {}
+	"settings": {
+		"C_Cpp.intelliSenseEngine": "default",
+	}
 }
