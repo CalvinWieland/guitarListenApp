@@ -19,20 +19,45 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
     }
 
     // ChatGPT generated rms and decibel calculation
+    ////////
     float rms = std::sqrt(sumSquares / (nFrames));
-    float volumeDb = 20 * std::log10(rms + 1e-6f) + 80;
+    float volumeDb = 20 * std::log10(rms + 1e-6f);
+    ////////
+
+    float linearVolume = std::pow(10.0f, volumeDb / 20.0f);
+    float stretchedSqrt = std::sqrt(linearVolume);
+    float stretchedPow = std::pow(linearVolume, 0.3f);
+
 
     std::cout << "Decibels: " << volumeDb << std::endl;
     std::cout << "RMS: " << rms << std::endl;
+    std::cout << "linear volume: " << linearVolume << std::endl;
+    std::cout << "square rooted linear volume: " << linearVolume << std::endl;
+    std::cout << "powered linear volume: " << stretchedPow << std::endl;
 
     // clears console
     //std::cout << "\033[2J\033[H";
     std::cout << std::endl << std::endl;
 
-    // Display volume
-    for (int i = 0; i < volumeDb / 5.0; i++) {
+    std::cout << "Linear volume: " << std::endl;
+    for (double i = 0; i < linearVolume; i+=.01) {
         std::cout << "█";
     }
+    std::cout << std::endl;
+
+    std::cout << "Square rooted linear volume: " << std::endl;
+    // Display volume
+    for (double i = 0; i < stretchedSqrt; i+=.01) {
+        std::cout << "█";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Powered linear volume: " << std::endl;
+    // Display volume
+    for (double i = 0; i < stretchedPow; i+=.01) {
+        std::cout << "█";
+    }
+
 
     std::cout << std::endl << std::endl;
 
@@ -49,7 +74,7 @@ int main() {
 
     RtAudio::StreamParameters inputParams;
     inputParams.deviceId = audio.getDefaultInputDevice();
-    inputParams.deviceId = 132;
+    //inputParams.deviceId = 132;
     // using mono input
     inputParams.nChannels = 1;
     inputParams.firstChannel = 0;
