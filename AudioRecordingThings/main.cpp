@@ -10,6 +10,8 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
     // cast the input buffer to a double *
     float* buffer = (float *)inputBuffer;
 
+    // clears console
+    std::cout << "\033[2J\033[H";
     std::cout << "Value of inputBuffer[0]: " << buffer[0] << std::endl;
 
     float sumSquares = 0.0f;
@@ -28,15 +30,12 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
     float stretchedSqrt = std::sqrt(linearVolume);
     float stretchedPow = std::pow(linearVolume, 0.3f);
 
-
     std::cout << "Decibels: " << volumeDb << std::endl;
     std::cout << "RMS: " << rms << std::endl;
     std::cout << "linear volume: " << linearVolume << std::endl;
     std::cout << "square rooted linear volume: " << linearVolume << std::endl;
     std::cout << "powered linear volume: " << stretchedPow << std::endl;
 
-    // clears console
-    //std::cout << "\033[2J\033[H";
     std::cout << std::endl << std::endl;
 
     std::cout << "Linear volume: " << std::endl;
@@ -74,13 +73,28 @@ int main() {
 
     RtAudio::StreamParameters inputParams;
     inputParams.deviceId = audio.getDefaultInputDevice();
-    //inputParams.deviceId = 132;
+
+    // get the device IDs and names of every available device
+    std::vector<unsigned int> deviceIDs = audio.getDeviceIds();
+    for (std::vector<unsigned int>::iterator it = deviceIDs.begin(); it != deviceIDs.end(); ++it) {
+        std::cout << "Device ID: " << *it << " " << audio.getDeviceInfo(*it).name << std::endl;
+    }
+    
+    //user input to select device
+    int choice = 0;
+    while (choice <= 128 || choice > 128 + audio.getDeviceCount()) {
+        std::cout << "Enter device ID for the device you want: ";
+        std::cin >> choice;
+    }
+    std::cout << "Sample Rate: " << audio.getDeviceInfo(choice).currentSampleRate << std::endl;
+
     // using mono input
     inputParams.nChannels = 1;
     inputParams.firstChannel = 0;
+    inputParams.deviceId = choice;
 
-    // Are 44,100 samples per second, 256 samples in a buffer
-    unsigned int sampleRate = 44100;
+    // set sample rate to the sample rate of the device being used
+    unsigned int sampleRate = audio.getDeviceInfo(inputParams.deviceId).currentSampleRate;
     unsigned int bufferFrames = 256;
 
     try {
@@ -88,18 +102,12 @@ int main() {
                          sampleRate, &bufferFrames, &recordCallback);
         audio.startStream();
 
-        // get the device IDs and names of every available device
-        std::vector<unsigned int> deviceIDs = audio.getDeviceIds();
-        for (std::vector<unsigned int>::iterator it = deviceIDs.begin(); it != deviceIDs.end(); ++it) {
-            std::cout << "Device ID: " << *it << " " << audio.getDeviceInfo(*it).name << std::endl;
-        }
-
         // list the default input device
         unsigned int defaultInputDevice = audio.getDefaultInputDevice();
         RtAudio::DeviceInfo info = audio.getDeviceInfo(defaultInputDevice);
         std::cout << "Default input device: " << info.name << " ID " << defaultInputDevice << std::endl;
 
-        std::cout << "Press enter to stop recording." << std::endl;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin.get();
 
         audio.stopStream();
