@@ -1,5 +1,6 @@
 ofxAssimp
 ofxAssimpModelLoader
+ofxAubio
 ofxGui
 ofxNetwork
 ofxThreadedImageLoader

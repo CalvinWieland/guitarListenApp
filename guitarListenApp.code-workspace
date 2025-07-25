@@ -1,16 +1,13 @@
 {
 	"folders": [
 		{
-			"path": "."
-		},
-		{
-			"path": "${workspaceRoot}/../../../../libs/openFrameworks"
-		},
-		{
 			"path": "${workspaceRoot}/../../../../addons/ofxAssimp"
 		},
 		{
 			"path": "${workspaceRoot}/../../../../addons/ofxAssimpModelLoader"
+		},
+		{
+			"path": "${workspaceRoot}/../../../../addons/ofxAubio"
 		},
 		{
 			"path": "${workspaceRoot}/../../../../addons/ofxGui"
@@ -31,8 +28,5 @@
 			"path": "${workspaceRoot}/../../../../addons/ofxXmlSettings"
 		}
 	],
-	"openFrameworksProjectGeneratorVersion": "0.103.0",
-	"settings": {
-		"C_Cpp.intelliSenseEngine": "default",
-	}
+	"openFrameworksProjectGeneratorVersion": "0.103.0"
 }

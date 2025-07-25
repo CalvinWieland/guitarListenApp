@@ -1,15 +1,30 @@
+
+#include "glad.h"
 #include "RtAudio.h"
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
 #include "kissfft/kiss_fft.h"
+#include "implot/implot.h"
+
+//export CPATH="/opt/homebrew/include";
+//export LIBRARY_PATH="/opt/homebrew/lib";
+
+//#include <GLFW/glfw3.h>
+#include "glfw3.h"
+//#include <OpenGL/gl3.h>
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 //#include "../../../../addons/ofxAubio/src/ofxAubio.h"
 //#include "/Users/calvi/Documents/openFrameworks/of_v0.12.1_osx_release/addons/ofxAubio/src/ofxAubio.h"
 
-int BUFFER_SIZE = 512;
+int BUFFER_SIZE = 1024;
+int numCallbackCalls = 0;
+float firstBuffer[1024] = {0.0f};
+float magBuffer[1024] = {0.0f};
 
 void hannWindow (std::vector<float> &buffer);
-void FFT(std::vector<float> &buffer);
+kiss_fft_cfg FFT(std::vector<float> &buffer);
 
 // callback function for input and output
 int recordCallback(void *outputBuffer, void *inputBuffer,
@@ -74,7 +89,16 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
     hannWindow(bufferVector);
     FFT(bufferVector);
 
+    if (numCallbackCalls == 20) {
+        // store the first buffer
+        for (int i = 0; i < nFrames; i++) {
+            firstBuffer[i] = buffer[i];
+        }
+    }
+
     std::cout << std::endl << std::endl;
+
+    numCallbackCalls++;
 
     return 0;
 }
@@ -90,7 +114,7 @@ void hannWindow (std::vector<float> &buffer) {
 }
 
 // does a fast fourier transform on the buffer using kissfft
-void FFT(std::vector<float> &buffer) {
+kiss_fft_cfg FFT(std::vector<float> &buffer) {
     int sizeOfInput = buffer.size();
 
     kiss_fft_cpx input[sizeOfInput], output[sizeOfInput];
@@ -105,6 +129,19 @@ void FFT(std::vector<float> &buffer) {
     // perform FFT
     kiss_fft(cfg, input, output);
 
+    // // print the results
+    // printf("FFT Results:\n");
+    // for (int k = 0; k < sizeOfInput; ++k) {
+    //     printf("Bin %d: Real = %f, Imaginary = %f\n", k, output[k].r, output[k].i);
+    // }
+
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+        float real = output[i].r;
+        float imag = output[i].i;
+        magBuffer[i] = sqrtf(real * real + imag * imag);
+    }
+
+    return cfg;
 }
 
 int main() {
@@ -114,6 +151,10 @@ int main() {
         std::cout << "No audio devices found" << std::endl;
         return 1;
     }
+
+
+    ///////////////////
+    ///////////////////
 
     RtAudio::StreamParameters inputParams;
     inputParams.deviceId = audio.getDefaultInputDevice();
@@ -166,5 +207,84 @@ int main() {
     }
 
     if (audio.isStreamOpen()) audio.closeStream();
+
+        // Initialize GLFW
+    if (!glfwInit()) return 1;
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
+
+    GLFWwindow* window = glfwCreateWindow(800, 600, "ImGui Example", NULL, NULL);
+    glfwMakeContextCurrent(window);
+
+    // Initialize GLAD (add this!)
+    if (!gladLoadGL()) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+    glfwSwapInterval(1);
+
+    // Initialize ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+    ImGui::StyleColorsDark();
+
+    ImPlot::CreateContext();
+
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Your ImGui code here
+        ImGui::Begin("My Window");
+        ImGui::Text("Hello, world %d", 123);
+        ImGui::End();
+
+        
+
+        static float x[1024], y[100];
+        for (int i = 0; i < BUFFER_SIZE; ++i) {
+            x[i] = i;
+            y[i] = sin(x[i]);
+        }
+
+        if (ImPlot::BeginPlot("Sound Wave cross section")) {
+            ImPlot::PlotLine("", x, firstBuffer, 1024);
+            ImPlot::EndPlot();
+        }
+
+        if (ImPlot::BeginPlot("FFT Result")) {
+            ImPlot::PlotLine("", x, magBuffer, 1024);
+            ImPlot::EndPlot();
+        }
+
+
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        glfwSwapBuffers(window);
+    }
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+
     return 0;
 }
