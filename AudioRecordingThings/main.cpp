@@ -2,6 +2,14 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
+#include "kissfft/kiss_fft.h"
+//#include "../../../../addons/ofxAubio/src/ofxAubio.h"
+//#include "/Users/calvi/Documents/openFrameworks/of_v0.12.1_osx_release/addons/ofxAubio/src/ofxAubio.h"
+
+int BUFFER_SIZE = 512;
+
+void hannWindow (std::vector<float> &buffer);
+void FFT(std::vector<float> &buffer);
 
 // callback function for input and output
 int recordCallback(void *outputBuffer, void *inputBuffer,
@@ -15,7 +23,7 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
     std::cout << "Value of inputBuffer[0]: " << buffer[0] << std::endl;
 
     float sumSquares = 0.0f;
-    for (unsigned int i = 0; i < nFrames; ++i) {
+    for (unsigned int i = 0; i < nFrames; i++) {
         float sample = buffer[i];
         sumSquares += sample * sample;
     }
@@ -57,10 +65,46 @@ int recordCallback(void *outputBuffer, void *inputBuffer,
         std::cout << "█";
     }
 
+    std::vector<float> bufferVector(nFrames);
+    // store audio buffer in vector
+    for (int i = 0; i < nFrames; i++) {
+        bufferVector[i] = buffer[i];
+    }
+
+    hannWindow(bufferVector);
+    FFT(bufferVector);
 
     std::cout << std::endl << std::endl;
 
     return 0;
+}
+
+// applies Hann window on the buffer
+void hannWindow (std::vector<float> &buffer) {
+    int sizeOfInput = buffer.size();
+
+    // code refactored from Joonas Pulakka at https://stackoverflow.com/questions/3555318/implement-hann-window
+    for (int i = 0; i < sizeOfInput; i++) {
+        buffer[i] *= 0.5 * (1 - cos(2 * M_PI * i / (sizeOfInput - 1)));
+    }
+}
+
+// does a fast fourier transform on the buffer using kissfft
+void FFT(std::vector<float> &buffer) {
+    int sizeOfInput = buffer.size();
+
+    kiss_fft_cpx input[sizeOfInput], output[sizeOfInput];
+    kiss_fft_cfg cfg = kiss_fft_alloc(sizeOfInput, 0, nullptr, nullptr);
+
+    // fill input with buffer info
+    for (int i = 0; i < sizeOfInput; i++) {
+        input[i].r = buffer[i];
+        input[i].i = 0;
+    }
+
+    // perform FFT
+    kiss_fft(cfg, input, output);
+
 }
 
 int main() {
@@ -77,7 +121,9 @@ int main() {
     // get the device IDs and names of every available device
     std::vector<unsigned int> deviceIDs = audio.getDeviceIds();
     for (std::vector<unsigned int>::iterator it = deviceIDs.begin(); it != deviceIDs.end(); ++it) {
-        std::cout << "Device ID: " << *it << " " << audio.getDeviceInfo(*it).name << std::endl;
+        std::cout << "Device ID: " << *it << " " << audio.getDeviceInfo(*it).name;
+        std::cout << " Inpt cnls: " << audio.getDeviceInfo(*it).inputChannels << std::endl;
+
     }
     
     //user input to select device
@@ -87,6 +133,7 @@ int main() {
         std::cin >> choice;
     }
     std::cout << "Sample Rate: " << audio.getDeviceInfo(choice).currentSampleRate << std::endl;
+    std::cout << "Channels: " << audio.getDeviceInfo(choice).inputChannels << std::endl;
 
     // using mono input
     inputParams.nChannels = 1;
@@ -95,7 +142,7 @@ int main() {
 
     // set sample rate to the sample rate of the device being used
     unsigned int sampleRate = audio.getDeviceInfo(inputParams.deviceId).currentSampleRate;
-    unsigned int bufferFrames = 256;
+    unsigned int bufferFrames = BUFFER_SIZE;
 
     try {
         audio.openStream(nullptr, &inputParams, RTAUDIO_FLOAT32,
@@ -105,7 +152,8 @@ int main() {
         // list the default input device
         unsigned int defaultInputDevice = audio.getDefaultInputDevice();
         RtAudio::DeviceInfo info = audio.getDeviceInfo(defaultInputDevice);
-        std::cout << "Default input device: " << info.name << " ID " << defaultInputDevice << std::endl;
+        std::cout << "Default input device: " << info.name << " ID " << defaultInputDevice;
+        std::cout << "Inpt cnls: " << audio.getDeviceInfo(inputParams.deviceId).inputChannels << std::endl;
 
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin.get();
